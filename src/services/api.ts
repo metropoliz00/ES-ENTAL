@@ -367,7 +367,14 @@ export const api = {
   
   getSchoolSchedules: async (): Promise<SchoolSchedule[]> => {
       const { data, error } = await supabase.from('school_schedules').select('*');
-      return error ? [] : data;
+      if (error || !data) return [];
+      
+      // Ensure dates are in YYYY-MM-DD format for HTML date inputs
+      return data.map((s: any) => ({
+          ...s,
+          tanggal: s.tanggal ? s.tanggal.split('T')[0] : '',
+          tanggal_selesai: s.tanggal_selesai ? s.tanggal_selesai.split('T')[0] : ''
+      }));
   },
 
   saveSchoolSchedules: async (schedules: SchoolSchedule[]): Promise<{success: boolean, message?: string}> => {
