@@ -7,6 +7,7 @@ import { Save, Plus, Trash2, Calendar, Clock } from 'lucide-react';
 const AturGelombangTab = ({ students = [] }: { students?: any[] }) => {
     const [schedules, setSchedules] = useState<SchoolSchedule[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const { showToast } = useToast();
 
     // Extract Unique Schools from Students
@@ -38,17 +39,30 @@ const AturGelombangTab = ({ students = [] }: { students?: any[] }) => {
     };
 
     const handleSave = async () => {
-        const validSchedules = schedules.filter(s => s.school.trim() !== '');
-        if (validSchedules.length === 0 && schedules.length > 0) {
-            showToast('Harap isi nama sekolah', 'warning');
+        // Filter out completely empty rows
+        const activeSchedules = schedules.filter(s => s.school.trim() !== '');
+        
+        if (activeSchedules.length === 0 && schedules.length > 0) {
+            showToast('Harap pilih minimal satu sekolah', 'warning');
             return;
         }
-        const result = await api.saveSchoolSchedules(validSchedules);
+
+        // Validate that each active schedule has a date and wave
+        const incomplete = activeSchedules.find(s => !s.tanggal || !s.gelombang);
+        if (incomplete) {
+            showToast(`Harap lengkapi tanggal dan gelombang untuk sekolah ${incomplete.school}`, 'warning');
+            return;
+        }
+
+        setSaving(true);
+        const result = await api.saveSchoolSchedules(activeSchedules);
+        setSaving(false);
+
         if (result.success) {
             showToast('Jadwal berhasil disimpan', 'success');
             fetchSchedules(); // Refresh to get any DB-side changes
         } else {
-            showToast('Gagal menyimpan jadwal. Pastikan data lengkap.', 'error');
+            showToast(result.message || 'Gagal menyimpan jadwal. Pastikan data lengkap.', 'error');
         }
     };
 
@@ -75,8 +89,25 @@ const AturGelombangTab = ({ students = [] }: { students?: any[] }) => {
                     <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Calendar size={24} className="text-indigo-600"/> Atur Jadwal Gelombang</h2>
                     <p className="text-sm text-slate-500">Kelola jadwal ujian per sekolah/gelombang.</p>
                 </div>
-                <button onClick={handleSave} className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700 font-bold text-sm shadow-lg shadow-indigo-200">
-                    <Save size={18} /> Simpan Jadwal
+                <button 
+                    onClick={handleSave} 
+                    disabled={saving}
+                    className={`px-4 py-2 rounded-lg flex items-center gap-2 font-bold text-sm shadow-lg transition-all ${
+                        saving 
+                        ? 'bg-slate-400 cursor-not-allowed text-white' 
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                    }`}
+                >
+                    {saving ? (
+                        <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Menyimpan...
+                        </>
+                    ) : (
+                        <>
+                            <Save size={18} /> Simpan Jadwal
+                        </>
+                    )}
                 </button>
             </div>
 

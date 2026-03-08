@@ -370,20 +370,53 @@ export const api = {
       return error ? [] : data;
   },
 
-  saveSchoolSchedules: async (schedules: SchoolSchedule[]): Promise<{success: boolean}> => {
-      // Filter out empty rows to prevent Supabase errors
-      const validSchedules = schedules.filter(s => s.school.trim() !== '' && s.gelombang.trim() !== '');
+  saveSchoolSchedules: async (schedules: SchoolSchedule[]): Promise<{success: boolean, message?: string}> => {
+      // Filter out rows that don't even have a school name
+      // Also clean up empty strings for dates to be null
+      const validSchedules = schedules
+          .filter(s => s.school && s.school.trim() !== '')
+          .map(s => ({
+              school: s.school.trim(),
+              gelombang: s.gelombang || 'Gelombang 1',
+              tanggal: s.tanggal || null,
+              tanggal_selesai: s.tanggal_selesai || null
+          }));
       
-      if (validSchedules.length === 0 && schedules.length > 0) {
-          console.warn("No valid schedules to save (empty school or gelombang)");
-          return { success: false };
-      }
+      try {
+          // 1. Delete all existing schedules to sync with the new list
+          // Using a filter that is guaranteed to match all rows if they exist
+          const { error: deleteError } = await supabase
+              .from('school_schedules')
+              .delete()
+              .or('school.neq.null,school.is.null'); // This effectively matches everything
 
-      const { error } = await supabase.from('school_schedules').upsert(validSchedules, { onConflict: 'school' });
-      if (error) {
-          console.error("Supabase saveSchoolSchedules error:", error);
+          if (deleteError) {
+              console.error("Error deleting old schedules:", deleteError);
+              // If it's a permission error or something else, we might want to try upsert instead
+              // but for now let's report it
+              return { success: false, message: `Gagal membersihkan data lama: ${deleteError.message}` };
+          }
+
+          // 2. If there are no valid schedules to insert, we're done (cleared the list)
+          if (validSchedules.length === 0) {
+              return { success: true };
+          }
+
+          // 3. Insert the new list
+          const { error: insertError } = await supabase
+              .from('school_schedules')
+              .insert(validSchedules);
+
+          if (insertError) {
+              console.error("Error inserting new schedules:", insertError);
+              return { success: false, message: `Gagal menyimpan data baru: ${insertError.message}` };
+          }
+
+          return { success: true };
+      } catch (err: any) {
+          console.error("Unexpected error in saveSchoolSchedules:", err);
+          return { success: false, message: err.message || "Terjadi kesalahan tak terduga" };
       }
-      return { success: !error };
   },
 
   getRecap: async (): Promise<any[]> => {
