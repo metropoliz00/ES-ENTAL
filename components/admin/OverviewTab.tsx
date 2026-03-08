@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { School, Users, PlayCircle, CheckCircle2, AlertCircle, Key, Activity, Calendar, MapPin, Clock, Database, BookOpen, UserX, Search, BarChart3, Filter, ChevronDown, ChevronUp, UserCog, Shield } from 'lucide-react';
+import { School, Users, PlayCircle, CheckCircle2, AlertCircle, Key, Activity, Calendar, MapPin, Clock, Database, BookOpen, UserX, Search, BarChart3, Filter, ChevronDown, ChevronUp, UserCog, Shield, Layers } from 'lucide-react';
 import { User } from '../../types';
 import { SimpleDonutChart } from '../../utils/adminHelpers';
 
@@ -42,6 +42,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ dashboardData, currentUserSta
     const activeCategories = useMemo(() => {
         const categories = new Set(activeExamStudents.map((u: any) => u.exam_type).filter((t: any) => t && t !== '-'));
         return Array.from(categories);
+    }, [activeExamStudents]);
+
+    // NEW: Count active subjects
+    const activeSubjects = useMemo(() => {
+        const subjects = new Set(activeExamStudents.map((u: any) => u.active_exam).filter((s: any) => s && s !== '-'));
+        return Array.from(subjects);
     }, [activeExamStudents]);
 
     // FILTER ADMIN/GURU FOR INFO
@@ -287,13 +293,23 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ dashboardData, currentUserSta
                             )}
                         </div>
                     </div>
-                    <div className="bg-orange-50 p-3 rounded-xl text-orange-500 shrink-0"><School size={28}/></div>
+                    <div className="bg-orange-50 p-3 rounded-xl text-orange-500 shrink-0"><Layers size={28}/></div>
                 </div>
             )}
 
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow">
-                <div><p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">Siswa pada Ujian Aktif</p><h3 className="text-2xl md:text-3xl font-black text-slate-800 mt-1">{displayTotalStudents}</h3></div>
-                <div className="bg-slate-100 p-3 rounded-xl text-slate-600"><Users size={28}/></div>
+                <div className="flex-1">
+                    <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">Siswa pada Ujian Aktif</p>
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                        <h3 className="text-2xl md:text-3xl font-black text-slate-800 mt-1">{displayTotalStudents}</h3>
+                        {activeSubjects.length > 0 && (
+                            <p className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                                {activeSubjects.join(', ')}
+                            </p>
+                        )}
+                    </div>
+                </div>
+                <div className="bg-slate-100 p-3 rounded-xl text-slate-600 shrink-0"><Users size={28}/></div>
             </div>
             
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow">
