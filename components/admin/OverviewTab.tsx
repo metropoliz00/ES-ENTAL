@@ -276,11 +276,18 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ dashboardData, currentUserSta
         <div className={`grid grid-cols-1 md:grid-cols-2 ${currentUserState.role === 'admin' ? 'xl:grid-cols-5' : 'xl:grid-cols-4'} gap-6`}>
             {currentUserState.role === 'admin' && (
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow">
-                    <div>
+                    <div className="flex-1">
                         <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">Jumlah Jenis Ujian Aktif</p>
-                        <h3 className="text-2xl md:text-3xl font-black text-slate-800 mt-1">{activeExams.length}</h3>
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 mt-1">{activeExams.length}</h3>
+                            {activeExams.length > 0 && (
+                                <p className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                                    {activeExams.join(', ')}
+                                </p>
+                            )}
+                        </div>
                     </div>
-                    <div className="bg-orange-50 p-3 rounded-xl text-orange-500"><School size={28}/></div>
+                    <div className="bg-orange-50 p-3 rounded-xl text-orange-500 shrink-0"><School size={28}/></div>
                 </div>
             )}
 
