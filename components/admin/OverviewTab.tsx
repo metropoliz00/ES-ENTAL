@@ -38,10 +38,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ dashboardData, currentUserSta
         return studentUsers.filter((u: any) => u.active_exam && u.active_exam !== '-');
     }, [studentUsers]);
 
-    // NEW: Count active exams
-    const activeExams = useMemo(() => {
-        const exams = new Set(activeExamStudents.map((u: any) => u.active_exam));
-        return Array.from(exams);
+    // NEW: Count active categories
+    const activeCategories = useMemo(() => {
+        const categories = new Set(activeExamStudents.map((u: any) => u.exam_type).filter((t: any) => t && t !== '-'));
+        return Array.from(categories);
     }, [activeExamStudents]);
 
     // FILTER ADMIN/GURU FOR INFO
@@ -277,12 +277,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ dashboardData, currentUserSta
             {currentUserState.role === 'admin' && (
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow">
                     <div className="flex-1">
-                        <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">Jumlah Jenis Ujian Aktif</p>
+                        <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">Jumlah Kategori Ujian Aktif</p>
                         <div className="flex items-baseline gap-2 flex-wrap">
-                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 mt-1">{activeExams.length}</h3>
-                            {activeExams.length > 0 && (
+                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 mt-1">{activeCategories.length}</h3>
+                            {activeCategories.length > 0 && (
                                 <p className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
-                                    {activeExams.join(', ')}
+                                    {activeCategories.join(', ')}
                                 </p>
                             )}
                         </div>
